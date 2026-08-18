@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odysseus Solutions | Cruise Booking System</title>
+    <!-- Modern Typography from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">⚓</div>
+                <div>
+                    <h1>ODYSSEUS SOLUTIONS</h1>
+                    <span class="subhead">Cruise Booking & Pricing Engine</span>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <div class="role-selector">
+                    <label for="roleSelect">Mode:</label>
+                    <select id="roleSelect" onchange="handleRoleChange()">
+                        <option value="Customer">Customer</option>
+                        <option value="Agent">Travel Agent</option>
+                        <option value="Admin">System Administrator</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" id="tabCatalogBtn" onclick="switchTab('catalog')">🚢 Browse Cruises</button>
+            <button class="tab-btn" id="tabBookingBtn" onclick="switchTab('booking')">📝 Booking Engine</button>
+            <button class="tab-btn" id="tabLookupBtn" onclick="switchTab('lookup')">🔍 Lookup & Reconstruct Audit</button>
+            <button class="tab-btn admin-only" id="tabAdminBtn" onclick="switchTab('admin')" style="display: none;">⚙️ Admin Controls</button>
+        </nav>
+
+        <!-- Main Content Views -->
+        <main class="main-content">
+            <!-- 1. CATALOG VIEW -->
+            <section id="viewCatalog" class="view-section active">
+                <div class="section-header">
+                    <h2>Available Cruise Itineraries</h2>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search ship, destination, cruise line..." oninput="renderCruises()">
+                    </div>
+                </div>
+                <div id="cruisesGrid" class="cruises-grid">
+                    <!-- Dynamic Cruise Cards Served Here -->
+                </div>
+            </section>
+
+            <!-- 2. BOOKING VIEW -->
+            <section id="viewBooking" class="view-section">
+                <div class="booking-layout">
+                    <!-- Left: Form Configuration -->
+                    <div class="booking-form-card glass-panel">
+                        <h2>Configure Passenger Details & Extras</h2>
+                        
+                        <!-- Selected Cruise Card -->
+                        <div id="selectedCruiseBanner" class="selected-cruise-banner">
+                            <p class="placeholder-text">Please select a cruise from the Catalog tab first.</p>
+                        </div>
+
+                        <form id="bookingForm" onsubmit="handleBookingSubmit(event)">
+                            <div class="form-group row-2">
+                                <div>
+                                    <label for="custName">Full Name *</label>
+                                    <input type="text" id="custName" required placeholder="e.g. Eleanor Vance">
+                                </div>
+                                <div>
+                                    <label for="custEmail">Email Address *</label>
+                                    <input type="email" id="custEmail" required placeholder="eleanor@example.com" onchange="triggerPriceRecalc()">
+                                </div>
+                            </div>
+
+                            <hr class="divider">
+
+                            <div class="form-group row-2">
+                                <div>
+                                    <label for="adultCount">Adult Passengers (18+) *</label>
+                                    <select id="adultCount" onchange="handlePaxChange()">
+                                        <option value="1">1 Adult</option>
+                                        <option value="2" selected>2 Adults</option>
+                                        <option value="3">3 Adults</option>
+                                        <option value="4">4 Adults</option>
+                                        <option value="5">5 Adults</option>
+                                        <option value="6">6 Adults</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="childCount">Child Passengers (0-17)</label>
+                                    <select id="childCount" onchange="handlePaxChange()">
+                                        <option value="0" selected>0 Children</option>
+                                        <option value="1">1 Child</option>
+                                        <option value="2">2 Children</option>
+                                        <option value="3">3 Children</option>
+                                        <option value="4">4 Children</option>
+                                        <option value="5">5 Children</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="childAgesContainer" class="child-ages-container" style="display: none;">
+                                <label>Child Ages at Booking (0-17):</label>
+                                <div id="childAgesInputs" class="child-ages-grid"></div>
+                            </div>
+
+                            <hr class="divider">
+
+                            <div class="form-group">
+                                <label>Optional Services & Add-ons:</label>
+                                <div class="extras-options">
+                                    <label class="checkbox-card">
+                                        <input type="checkbox" id="svcInsurance" value="INSURANCE" onchange="triggerPriceRecalc()">
+                                        <div>
+                                            <strong>Travel Insurance</strong>
+                                            <span>$80 per passenger (Flat Rate)</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-card">
+                                        <input type="checkbox" id="svcWifi" value="WIFI" onchange="triggerPriceRecalc()">
+                                        <div>
+                                            <strong>Wi-Fi Package</strong>
+                                            <span>$15 per passenger / night</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-card">
+                                        <input type="checkbox" id="svcExcursion" value="EXCURSION" onchange="triggerPriceRecalc()">
+                                        <div>
+                                            <strong>Shore Excursions Pass</strong>
+                                            <span>$120 per passenger (Flat Rate)</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <hr class="divider">
+
+                            <div class="form-group">
+                                <label for="promoCodeInput">Promotional Code</label>
+                                <div class="promo-input-group">
+                                    <input type="text" id="promoCodeInput" placeholder="Enter code (e.g. SUMMER10, FIRST150)" style="text-transform: uppercase;">
+                                    <button type="button" class="btn-secondary" onclick="triggerPriceRecalc()">Apply Code</button>
+                                </div>
+                                <div id="promoFeedback" class="promo-feedback"></div>
+                            </div>
+
+                            <button type="submit" id="submitBookingBtn" class="btn-primary btn-large">Confirm & Lock Booking</button>
+                        </form>
+                    </div>
+
+                    <!-- Right: Dynamic Price Breakdown Card -->
+                    <div class="pricing-card glass-panel">
+                        <h2>Itemized Price Breakdown</h2>
+                        <div id="pricingBreakdownContainer">
+                            <p class="placeholder-text">Select a cruise to view live pricing calculation.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. LOOKUP & RECONSTRUCT AUDIT VIEW -->
+            <section id="viewLookup" class="view-section">
+                <div class="lookup-container glass-panel">
+                    <h2>Booking Lookup & Price Reconstructability Audit</h2>
+                    <p class="section-desc">Per Requirement FR-08, retrieve stored immutable pricing snapshots and verify that price calculations remain 100% exact over time.</p>
+                    
+                    <div class="lookup-bar">
+                        <input type="text" id="lookupInput" placeholder="Enter Booking Reference (e.g. CRZ-2026-X89A12)" style="text-transform: uppercase;">
+                        <button class="btn-primary" onclick="handleLookupSubmit()">Verify Pricing Audit</button>
+                    </div>
+
+                    <div id="auditResultContainer" class="audit-result-container"></div>
+                </div>
+            </section>
+
+            <!-- 4. ADMIN VIEW -->
+            <section id="viewAdmin" class="view-section">
+                <div class="admin-grid">
+                    <!-- Manage Cruises Card -->
+                    <div class="admin-card glass-panel">
+                        <h2>Add New Cruise Itinerary</h2>
+                        <form id="adminCruiseForm" onsubmit="handleAdminCreateCruise(event)">
+                            <div class="form-group">
+                                <label>Cruise Line</label>
+                                <input type="text" id="admLine" required placeholder="e.g. Celebrity Cruises">
+                            </div>
+                            <div class="form-group">
+                                <label>Ship Name</label>
+                                <input type="text" id="admShip" required placeholder="e.g. Celebrity Apex">
+                            </div>
+                            <div class="form-group">
+                                <label>Departure Port (Source)</label>
+                                <input type="text" id="admPort" required placeholder="e.g. PortMiami, Florida, USA">
+                            </div>
+                            <div class="form-group">
+                                <label>Destination</label>
+                                <input type="text" id="admDest" required placeholder="e.g. Greek Isles">
+                            </div>
+                            <div class="form-group row-2">
+                                <div>
+                                    <label>Nights</label>
+                                    <input type="number" id="admNights" min="1" value="7" required>
+                                </div>
+                                <div>
+                                    <label>Adult Fare ($)</label>
+                                    <input type="number" id="admFare" min="0" step="50" value="1500" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Total Capacity</label>
+                                <input type="number" id="admCap" min="1" value="10" required>
+                            </div>
+                            <button type="submit" class="btn-primary">Create Cruise</button>
+                        </form>
+                    </div>
+
+                    <!-- Manage Promo Codes Card -->
+                    <div class="admin-card glass-panel">
+                        <h2>Add Promotional Code</h2>
+                        <form id="adminPromoForm" onsubmit="handleAdminCreatePromo(event)">
+                            <div class="form-group row-2">
+                                <div>
+                                    <label>Code</label>
+                                    <input type="text" id="admCode" required placeholder="PROMO2026" style="text-transform: uppercase;">
+                                </div>
+                                <div>
+                                    <label>Discount Type</label>
+                                    <select id="admType">
+                                        <option value="Percentage">Percentage (%)</option>
+                                        <option value="Fixed">Fixed Amount ($)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row-2">
+                                <div>
+                                    <label>Value</label>
+                                    <input type="number" id="admValue" min="1" step="1" value="15" required>
+                                </div>
+                                <div>
+                                    <label>Min Spend ($)</label>
+                                    <input type="number" id="admMinSpend" min="0" step="100" value="1000">
+                                </div>
+                            </div>
+                            <div class="form-group row-2">
+                                <div>
+                                    <label>Valid From</label>
+                                    <input type="date" id="admFrom" value="2026-01-01" required>
+                                </div>
+                                <div>
+                                    <label>Valid To</label>
+                                    <input type="date" id="admTo" value="2026-12-31" required>
+                                </div>
+                            </div>
+                            <div class="form-group row-2">
+                                <div>
+                                    <label>Max Total Uses</label>
+                                    <input type="number" id="admMaxTotal" min="1" value="100" required>
+                                </div>
+                                <div>
+                                    <label>Max Per Customer</label>
+                                    <input type="number" id="admMaxUser" min="1" value="1" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary">Save Promo Code</button>
+                        </form>
+                    </div>
+
+                    <!-- Active System Rules Config Card -->
+                    <div class="admin-card glass-panel full-width">
+                        <h2>Dynamic Rule Parameters Registry</h2>
+                        <div id="adminRulesContainer"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Booking Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <span class="success-icon">🎉</span>
+                <h2>Booking Confirmed!</h2>
+            </div>
+            <div class="modal-body">
+                <p>Your booking has been stored successfully with permanent price reconstructability.</p>
+                <div class="reference-box">
+                    <span>BOOKING REFERENCE CODE:</span>
+                    <strong id="modalRefCode">CRZ-2026-XXXXXX</strong>
+                </div>
+                <div id="modalSummaryDetails"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn-primary" onclick="goToAuditFromModal()">Inspect Reconstructability Audit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
